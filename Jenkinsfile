@@ -25,10 +25,10 @@ pipeline {
                         sh 'docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD'
                     // Assuming your Dockerfile is in the root of your project
                         docker.build("${DOCKER_REGISTRY}/${DOCKER_REPO}/${APP_NAME}:${BUILD_NUMBER}").push()
+                    }
                 }
             }
         }
-
         stage('Update Helm Values') {
             steps {
                 script {
