@@ -24,12 +24,14 @@ pipeline {
                     withCredentials([usernamePassword(credentialsId: 'docker_cred', passwordVariable: 'DOCKERHUB_PASSWORD', usernameVariable: 'DOCKERHUB_USERNAME')]) {
                         // Build and push Docker image using Docker credentials
                         docker.withRegistry("https://${DOCKER_REGISTRY}", 'docker_cred') {
-                            docker.build("${DOCKER_REGISTRY}/${DOCKER_REPO}/${APP_NAME}:${BUILD_NUMBER}").push()
+                            def dockerImage = docker.build("${DOCKER_REGISTRY}/${DOCKER_REPO}/${APP_NAME}:${BUILD_NUMBER}")
+                            dockerImage.push()
                         }
                     }
                 }
             }
         }
+
         stage('Update Helm Values') {
             steps {
                 script {
@@ -52,10 +54,10 @@ pipeline {
             steps {
                 script {
                     // Push the Helm chart to a registry
-                    docker.withRegistry("https://${DOCKER_REGISTRY}", 'docker-credentials-id') {
-                        sh "docker load -i ${APP_NAME}-${BUILD_NUMBER}.tgz"
+                    docker.withRegistry("https://${DOCKER_REGISTRY}", 'docker_cred') {
+                        def dockerImage = docker.image("${DOCKER_REGISTRY}/${DOCKER_REPO}/${APP_NAME}:${BUILD_NUMBER}")
+                        dockerImage.push()
                         sh "docker tag ${DOCKER_REGISTRY}/${DOCKER_REPO}/${APP_NAME}:${BUILD_NUMBER} ${DOCKER_REGISTRY}/${DOCKER_REPO}/${APP_NAME}:latest"
-                        sh "docker push ${DOCKER_REGISTRY}/${DOCKER_REPO}/${APP_NAME}:${BUILD_NUMBER}"
                         sh "docker push ${DOCKER_REGISTRY}/${DOCKER_REPO}/${APP_NAME}:latest"
                     }
                 }
@@ -63,4 +65,3 @@ pipeline {
         }
     }
 }
-
