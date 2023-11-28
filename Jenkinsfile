@@ -21,8 +21,10 @@ pipeline {
         stage('Build and Push Docker Image') {
             steps {
                 script {
+                    withCredentials([usernamePassword(credentialsId: 'docker_cred', passwordVariable: 'DOCKERHUB_PASSWORD', usernameVariable: 'DOCKERHUB_USERNAME')]) {
+                        sh 'docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD'
                     // Assuming your Dockerfile is in the root of your project
-                    docker.build("${DOCKER_REGISTRY}/${DOCKER_REPO}/${APP_NAME}:${BUILD_NUMBER}").push()
+                        docker.build("${DOCKER_REGISTRY}/${DOCKER_REPO}/${APP_NAME}:${BUILD_NUMBER}").push()
                 }
             }
         }
@@ -31,7 +33,7 @@ pipeline {
             steps {
                 script {
                     // Update the image tag in the values.yaml file of your Helm chart
-                    sh "sed -i 's|imageTag:.*|imageTag: ${BUILD_NUMBER}|' ${WORKSPACE}/path/to/your/helm/chart/values.yaml"
+                    sh "sed -i 's|imageTag:.*|imageTag: ${BUILD_NUMBER}|' ${WORKSPACE}/node-chart/values.yaml"
                 }
             }
         }
@@ -40,7 +42,7 @@ pipeline {
             steps {
                 script {
                     // Zip the Helm chart
-                    sh "cd ${WORKSPACE}/path/to/your/helm/chart && tar -czf ${WORKSPACE}/${APP_NAME}-${BUILD_NUMBER}.tgz ."
+                    sh "cd ${WORKSPACE} && tar -czf ${WORKSPACE}/${APP_NAME}-${BUILD_NUMBER}.tgz ."
                 }
             }
         }
