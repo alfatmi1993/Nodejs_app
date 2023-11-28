@@ -20,19 +20,11 @@ pipeline {
 
         stage('Build and Push Docker Image') {
             steps {
-                script {
-                    withCredentials([usernamePassword(credentialsId: 'docker_cred', passwordVariable: 'DOCKERHUB_PASSWORD', usernameVariable: 'DOCKERHUB_USERNAME')]) {
-    // Build and push Docker image using Docker credentials
-                        docker.withRegistry("https://${DOCKER_REGISTRY}", 'docker_cred') {
-                            def dockerImage = docker.build("${DOCKER_USERNAME}/${APP_NAME}:${BUILD_NUMBER}")
-        
-        // Tag the image
-                            dockerImage.tag("${DOCKER_REGISTRY}/${DOCKER_REPO}/${APP_NAME}:latest")
-        
-        // Push both tags
-                            dockerImage.push()
-                        }
-                    }
+                withCredentials([usernamePassword(credentialsId: 'docker_cred', passwordVariable: 'DOCKERHUB_PASSWORD', usernameVariable: 'DOCKERHUB_USERNAME')]) {
+                    sh 'docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD'
+                    sh 'docker tag my-node-app:1.0 bashidkk/my-node-app:$BUILD_NUMBER'
+                    sh 'docker push bashidkk/my-node-app:1.0'
+                    
                 }
             }
         }
