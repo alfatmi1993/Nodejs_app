@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         DOCKER_REGISTRY = 'docker.io'
-        DOCKER_REPO = 'bashidkk/my-app'
+        DOCKER_REPO = 'bashidkk/my-node-app'
         APP_NAME = 'my-app'
         KUBE_NAMESPACE = 'default'
         HELM_CHART_NAME = 'node-chart'
