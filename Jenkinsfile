@@ -21,18 +21,17 @@ pipeline {
         stage('Build and Push Docker Image') {
             steps {
                 script {
-                    sh "docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD"
+            // Use withCredentials to securely pass Docker Hub credentials
+                    withCredentials([usernamePassword(credentialsId: 'docker_cred', passwordVariable: 'DOCKERHUB_PASSWORD', usernameVariable: 'DOCKERHUB_USERNAME')]) {
+                // Use a subshell to pass Docker Hub credentials via standard input
+                        sh "(echo \$DOCKERHUB_PASSWORD | docker login -u \$DOCKERHUB_USERNAME --password-stdin) || true"
                 
-                        // Use docker login with credential helper
-                    sh "echo \$DOCKERHUB_PASSWORD | docker login -u \$DOCKERHUB_USERNAME --password-stdin"
-                
-                        // Assuming your Dockerfile is in the root of your project
-                    docker.build("${DOCKER_REGISTRY}/${DOCKER_REPO}/${APP_NAME}:${BUILD_NUMBER}").push()
-                    
+                // Assuming your Dockerfile is in the root of your project
+                        docker.build("${DOCKER_REGISTRY}/${DOCKER_REPO}/${APP_NAME}:${BUILD_NUMBER}").push()
+                    }
                 }
             }
         }
-
         stage('Update Helm Values') {
             steps {
                 script {
