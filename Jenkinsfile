@@ -21,7 +21,16 @@ pipeline {
         stage('Build and Push Docker Image') {
             steps {
                 script {
-                    docker.build("${DOCKER_REGISTRY}/${DOCKER_REPO}/${APP_NAME}:${BUILD_NUMBER}").push()
+                    withCredentials([usernamePassword(credentialsId: 'docker_cred', passwordVariable: 'DOCKERHUB_PASSWORD', usernameVariable: 'DOCKERHUB_USERNAME')]) {
+                        // Create a Docker credentials file
+                        writeFile file: "${WORKSPACE}/.docker/config.json", text: "{ \"auths\": { \"${DOCKER_REGISTRY}\": { \"username\": \"${DOCKERHUB_USERNAME}\", \"password\": \"${DOCKERHUB_PASSWORD}\" } } }"
+                        
+                        // Log in to Docker registry using --password-stdin
+                        sh 'docker login --config=${WORKSPACE}/.docker --password-stdin ${DOCKER_REGISTRY}'
+
+                        // Build and push Docker image
+                        docker.build("${DOCKER_REGISTRY}/${DOCKER_REPO}/${APP_NAME}:${BUILD_NUMBER}").push()
+                    }
                 }
             }
         }
