@@ -22,13 +22,17 @@ pipeline {
             steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'docker_cred', passwordVariable: 'DOCKERHUB_PASSWORD', usernameVariable: 'DOCKERHUB_USERNAME')]) {
+                
+                        // Use docker login with credential helper
                         sh "echo \$DOCKERHUB_PASSWORD | docker login -u \$DOCKERHUB_USERNAME --password-stdin"
-                    // Assuming your Dockerfile is in the root of your project
+                
+                        // Assuming your Dockerfile is in the root of your project
                         docker.build("${DOCKER_REGISTRY}/${DOCKER_REPO}/${APP_NAME}:${BUILD_NUMBER}").push()
                     }
                 }
             }
         }
+
         stage('Update Helm Values') {
             steps {
                 script {
