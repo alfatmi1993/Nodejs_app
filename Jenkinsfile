@@ -24,7 +24,7 @@ pipeline {
                     withCredentials([usernamePassword(credentialsId: 'docker_cred', passwordVariable: 'DOCKERHUB_PASSWORD', usernameVariable: 'DOCKERHUB_USERNAME')]) {
     // Build and push Docker image using Docker credentials
                         docker.withRegistry("https://${DOCKER_REGISTRY}", 'docker_cred') {
-                            def dockerImage = docker.build("${DOCKER_REGISTRY}/${DOCKER_REPO}/${APP_NAME}:${BUILD_NUMBER}")
+                            def dockerImage = docker.build("${DOCKER_USERNAME}/${APP_NAME}:${BUILD_NUMBER}")
         
         // Tag the image
                             dockerImage.tag("${DOCKER_REGISTRY}/${DOCKER_REPO}/${APP_NAME}:latest")
