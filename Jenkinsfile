@@ -21,12 +21,7 @@ pipeline {
         stage('Build and Push Docker Image') {
             steps {
                 script {
-                    // Use withCredentials to securely pass Docker Hub credentials
-                    withCredentials([usernamePassword(credentialsId: 'docker_cred', passwordVariable: 'DOCKERHUB_PASSWORD', usernameVariable: 'DOCKERHUB_USERNAME')]) {
-                        sh 'docker login -u $DOCKERHUB_USERNAME --password-stdin $DOCKERHUB_PASSWORD'
-                        // Assuming your Dockerfile is in the root of your project
-                        docker.build("${DOCKER_REGISTRY}/${DOCKER_REPO}/${APP_NAME}:${BUILD_NUMBER}").push()
-                    }
+                    docker.build("${DOCKER_REGISTRY}/${DOCKER_REPO}/${APP_NAME}:${BUILD_NUMBER}").push()
                 }
             }
         }
