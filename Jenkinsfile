@@ -22,7 +22,7 @@ pipeline {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'docker_cred', passwordVariable: 'DOCKERHUB_PASSWORD', usernameVariable: 'DOCKERHUB_USERNAME')]) {
                     sh 'docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD'
-                    sh 'docker tag $DOCKER_REPO:1.0 bashidkk/my-node-app:$BUILD_NUMBER'
+                    sh 'docker tag $DOCKER_REPO:1.0 $DOCKER_REPO:$BUILD_NUMBER'
                     sh 'docker push $DOCKER_REPO:$BUILD_NUMBER'
                     
                 }
