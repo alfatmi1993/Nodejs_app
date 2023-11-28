@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         DOCKER_REGISTRY = 'docker.io'
-        DOCKER_REPO = 'bashidkk/my-node-app'
+        DOCKER_REPO = 'bashidkk/my-maven-app'
         APP_NAME = 'my-app'
         KUBE_NAMESPACE = 'default'
         HELM_CHART_NAME = 'node-chart'
@@ -21,8 +21,13 @@ pipeline {
         stage('Build and Push Docker Image') {
             steps {
                 script {
-                    // Build and push Docker image
-                    docker.build("${DOCKER_REGISTRY}/${DOCKER_REPO}/${APP_NAME}:${BUILD_NUMBER}").push()
+                    withCredentials([usernamePassword(credentialsId: 'docker_cred', passwordVariable: 'DOCKERHUB_PASSWORD', usernameVariable: 'DOCKERHUB_USERNAME')]) {
+                        // Build and push Docker image using Docker credentials
+                        docker.withRegistry("https://${DOCKER_REGISTRY}", 'docker_cred') {
+                            def dockerImage = docker.build("${DOCKER_REGISTRY}/${DOCKER_REPO}/${APP_NAME}:${BUILD_NUMBER}")
+                            dockerImage.push()
+                        }
+                    }
                 }
             }
         }
