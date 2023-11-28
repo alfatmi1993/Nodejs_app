@@ -1,23 +1,63 @@
 pipeline {
     agent any
+
+    environment {
+        DOCKER_REGISTRY = 'docker.io'
+        DOCKER_REPO = 'bashidkk/my-app'
+        APP_NAME = 'my-app'
+        KUBE_NAMESPACE = 'default'
+        HELM_CHART_NAME = 'node-chart'
+    }
+
     stages {
-        stage("checkout"){
-            steps{
-                checkout scm
+        stage('Checkout') {
+            steps {
+                script {
+                    checkout scm
+                }
             }
         }
 
-        stage("Test"){
-            steps{
-                sh 'sudo apt install npm'
-                sh 'npm test'
+        stage('Build and Push Docker Image') {
+            steps {
+                script {
+                    // Assuming your Dockerfile is in the root of your project
+                    docker.build("${DOCKER_REGISTRY}/${DOCKER_REPO}/${APP_NAME}:${BUILD_NUMBER}").push()
+                }
             }
         }
-        
-        stage("Build"){
-            steps{
-                sh 'npm run build'
+
+        stage('Update Helm Values') {
+            steps {
+                script {
+                    // Update the image tag in the values.yaml file of your Helm chart
+                    sh "sed -i 's|imageTag:.*|imageTag: ${BUILD_NUMBER}|' ${WORKSPACE}/path/to/your/helm/chart/values.yaml"
+                }
+            }
+        }
+
+        stage('Zip Helm Chart') {
+            steps {
+                script {
+                    // Zip the Helm chart
+                    sh "cd ${WORKSPACE}/path/to/your/helm/chart && tar -czf ${WORKSPACE}/${APP_NAME}-${BUILD_NUMBER}.tgz ."
+                }
+            }
+        }
+
+        stage('Push Helm Chart to Registry') {
+            steps {
+                script {
+                    // Push the Helm chart to a registry
+                    docker.withRegistry("https://${DOCKER_REGISTRY}", 'docker-credentials-id') {
+                        sh "docker load -i ${APP_NAME}-${BUILD_NUMBER}.tgz"
+                        sh "docker tag ${DOCKER_REGISTRY}/${DOCKER_REPO}/${APP_NAME}:${BUILD_NUMBER} ${DOCKER_REGISTRY}/${DOCKER_REPO}/${APP_NAME}:latest"
+                        sh "docker push ${DOCKER_REGISTRY}/${DOCKER_REPO}/${APP_NAME}:${BUILD_NUMBER}"
+                        sh "docker push ${DOCKER_REGISTRY}/${DOCKER_REPO}/${APP_NAME}:latest"
+                    }
+                }
             }
         }
     }
 }
+
